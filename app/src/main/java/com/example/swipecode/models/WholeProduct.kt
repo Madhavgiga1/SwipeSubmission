@@ -1,6 +1,8 @@
 package com.example.swipecode.models
 
 
-import com.google.gson.annotations.SerializedName
 
-class WholeProduct : ArrayList<WholeProductItem>()
+
+data class WholeProduct(
+    val results:ArrayList<WholeProductItem>
+)

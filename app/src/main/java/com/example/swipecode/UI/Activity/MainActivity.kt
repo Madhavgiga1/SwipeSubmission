@@ -26,9 +26,9 @@ class MainActivity : AppCompatActivity() {
                 R.id.overviewFragment,
             )
         )
-        setupActionBarWithNavController(navController,appBarConfiguration)
+        //setupActionBarWithNavController(navController,appBarConfiguration)
     }
-    override fun onSupportNavigateUp(): Boolean {
+    /*override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp() || super.onSupportNavigateUp()
-    }
+    }*/
 }

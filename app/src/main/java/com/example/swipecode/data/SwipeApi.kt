@@ -7,6 +7,12 @@ import retrofit2.http.QueryMap
 
 interface SwipeApi {
 
-    @GET(value = "/recipes/complexSearch")
-    suspend fun getProducts(@QueryMap queries:Map<String,String>): Response<WholeProduct>
+    @GET(value = "/get")
+    suspend fun getProducts(): Response<WholeProduct>
+
+
+    @GET("/recipes/complexSearch")
+    suspend fun searchProducts(
+        @QueryMap searchQuery: Map<String, String>
+    ): Response<WholeProduct>
 }

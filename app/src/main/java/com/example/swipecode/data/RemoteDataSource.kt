@@ -6,7 +6,11 @@ import javax.inject.Inject
 
 class RemoteDataSource @Inject constructor(private val swipeApi: SwipeApi) {
 
-    suspend fun getRecipes(queries: Map<String,String>): Response<WholeProduct> {
-        return swipeApi.getProducts(queries)
+    suspend fun getProducts(): Response<WholeProduct> {
+        return swipeApi.getProducts()
+    }
+
+    suspend fun searchProduct(searchQuery: Map<String, String>): Response<WholeProduct> {
+        return swipeApi.searchProducts(searchQuery)
     }
 }

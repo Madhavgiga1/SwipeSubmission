@@ -8,7 +8,7 @@ plugins {
     id 'com.google.secrets_gradle_plugin' version '0.4'
     id 'dagger.hilt.android.plugin'
     id 'kotlin-parcelize'
-    id 'com.google.gms.google-services'
+
 }
 
 android {
@@ -116,16 +116,7 @@ dependencies {
     // Jsoup
     implementation 'org.jsoup:jsoup:1.13.1'
 
-    // Import the Firebase BoM
 
-
-
-
-
-
-
-    // Places SDK
-    implementation 'com.android.volley:volley:1.2.1'
 
     implementation "androidx.datastore:datastore-preferences:1.0.0"
 

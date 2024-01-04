@@ -3,6 +3,7 @@ package com.example.swipecode.di
 
 import com.example.swipecode.Utils.Constants.Companion.BASE_URL
 import com.example.swipecode.data.SwipeApi
+import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -37,12 +38,18 @@ object NetworkModule {
     @Provides
     fun providesRetrofitInstance(
         okHttpClient: OkHttpClient,
-        gsonConverterFactory:GsonConverterFactory
-    ):Retrofit{
+
+    ): Retrofit {
+
+        val gson = GsonBuilder()
+            .setLenient() // Set Gson to lenient mode
+            .create()
+
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttpClient)
-            .addConverterFactory(gsonConverterFactory).build()
+            .addConverterFactory(GsonConverterFactory.create(gson)) // Provide the custom Gson instance
+            .build()
     }
     /*@Provides annotation, which indicates that it is used to provide a dependency for the app. The method is also annotated
     with the @Singleton annotation, which indicates that the dependency is a singleton instance. This means that the same
