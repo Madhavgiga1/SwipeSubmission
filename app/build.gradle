@@ -68,6 +68,8 @@ dependencies {
     // Navigation Component
     implementation 'androidx.navigation:navigation-fragment-ktx:2.5.1'
     implementation 'androidx.navigation:navigation-ui-ktx:2.5.1'
+    implementation "com.squareup.retrofit2:converter-moshi:2.4.0"
+
 
     // Room components
     implementation "androidx.room:room-runtime:2.4.3"

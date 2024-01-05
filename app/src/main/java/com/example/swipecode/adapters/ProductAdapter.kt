@@ -10,7 +10,7 @@ import java.util.*
 
 class ProductAdapter(): RecyclerView.Adapter<ProductAdapter.MyViewHolder>() {
     // i will just assign the response of List of WholeProductItems received from the api to the variable products
-    var products = Collections.emptyList<WholeProductItem>()
+    var products = mutableListOf<WholeProductItem>()
 
     class MyViewHolder(private val binding: ProductRowLayoutBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(result: WholeProductItem){

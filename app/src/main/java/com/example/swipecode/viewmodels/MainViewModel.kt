@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -13,6 +14,7 @@ import com.example.swipecode.models.WholeProduct
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import retrofit2.Response
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,8 +24,39 @@ class MainViewModel @Inject constructor(
     //this live data would notify the data binding setup of any changes
     var productsResponse:MutableLiveData<NetworkResult<WholeProduct>> =MutableLiveData()
     var searchedProductsResponse:MutableLiveData<NetworkResult<WholeProduct>> =MutableLiveData()
+    //var uploadProductsResponse:MutableLiveData<NetworkResult<>>
     fun getProducts()=viewModelScope.launch {
         getProductsSafely()
+    }
+    fun uploadProducts(
+        productName: String,
+        productType: String,
+        price: Double,
+        tax: Double,
+        imageFile: File?
+    )=viewModelScope.launch {
+        uploadProductsSafely(productName, productType, price, tax, imageFile)
+    }
+
+    private suspend fun uploadProductsSafely(
+        productName: String,
+        productType: String,
+        price: Double,
+        tax: Double,
+        imageFile: File?
+    ) {
+        if(hasInternetConnection()){
+            val response=repository.remote.addProduct(productName, productType, price, tax, imageFile)
+
+        }
+        else{
+            Toast.makeText(
+                getApplication<Application>().applicationContext,
+                "Sorry, no internet",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
     }
 
     private suspend fun getProductsSafely() {
@@ -34,8 +67,6 @@ class MainViewModel @Inject constructor(
             try{
                 val response=repository.remote.getProducts()
                 productsResponse.value=handleProductResponse(response)
-
-                val products=productsResponse.value!!.data
 
             }
             catch (e:Exception){
@@ -63,16 +94,9 @@ class MainViewModel @Inject constructor(
 
     private fun handleProductResponse(response: Response<WholeProduct>): NetworkResult<WholeProduct>? {
         when{
-            response.message().toString().contains("timeout") -> {
-                return NetworkResult.Error("Timeout")
-            }
-            response.code() == 402 -> {
-                return NetworkResult.Error("API Key Limited.")
-            }
-
             response.isSuccessful -> {
-                val foodRecipes = response.body()
-                return NetworkResult.Success(foodRecipes!!)
+                val productres = response.body()
+                return NetworkResult.Success(productres!!)
             }
             else -> {
                 return NetworkResult.Error(response.message())

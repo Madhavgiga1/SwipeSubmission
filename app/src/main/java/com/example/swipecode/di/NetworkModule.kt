@@ -31,24 +31,25 @@ object NetworkModule {
     @Singleton
     @Provides
     fun provideConverterFactory(): GsonConverterFactory {
-        return GsonConverterFactory.create()
+        val gson = GsonBuilder()
+            .setLenient() // Set Gson to lenient mode
+            .create()
+
+        return GsonConverterFactory.create(gson)
     }
 
     @Singleton
     @Provides
     fun providesRetrofitInstance(
         okHttpClient: OkHttpClient,
-
+        gsonConverterFactory: GsonConverterFactory
     ): Retrofit {
 
-        val gson = GsonBuilder()
-            .setLenient() // Set Gson to lenient mode
-            .create()
 
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create(gson)) // Provide the custom Gson instance
+            .addConverterFactory(gsonConverterFactory)
             .build()
     }
     /*@Provides annotation, which indicates that it is used to provide a dependency for the app. The method is also annotated

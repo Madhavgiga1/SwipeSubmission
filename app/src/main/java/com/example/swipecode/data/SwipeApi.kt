@@ -1,13 +1,15 @@
 package com.example.swipecode.data
 
 import com.example.swipecode.models.WholeProduct
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.ResponseBody
 import retrofit2.Response
-import retrofit2.http.GET
-import retrofit2.http.QueryMap
+import retrofit2.http.*
 
 interface SwipeApi {
 
-    @GET(value = "/get")
+    @GET(value ="get")
     suspend fun getProducts(): Response<WholeProduct>
 
 
@@ -15,4 +17,14 @@ interface SwipeApi {
     suspend fun searchProducts(
         @QueryMap searchQuery: Map<String, String>
     ): Response<WholeProduct>
+
+    @Multipart
+    @POST("add")
+    suspend fun addProduct(
+        @Part("product_name") productName: RequestBody,
+        @Part("product_type") productType: RequestBody,
+        @Part("price") price: RequestBody,
+        @Part("tax") tax: RequestBody,
+        @Part image: MultipartBody.Part?
+    ):ResponseBody
 }

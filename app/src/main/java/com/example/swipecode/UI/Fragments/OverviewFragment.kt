@@ -7,7 +7,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.NavHostFragment.Companion.findNavController
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.swipecode.R
 import com.example.swipecode.Utils.NetworkResult
 import com.example.swipecode.viewmodels.MainViewModel
 import com.example.swipecode.adapters.ProductAdapter
@@ -35,12 +38,15 @@ class OverviewFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        _binding = FragmentOverviewBinding.inflate(inflater, container, false)
-        //This line inflates the layout associated with the FragmentRecipesBinding class using the provided inflater and container parameters. It creates an instance of the binding object and assigns it to the _binding variable.
-        binding.viewModel = mainViewModel!!
-        setupRecyclerView()
         requestApiData()
+        _binding = FragmentOverviewBinding.inflate(inflater, container, false)
+        binding.viewModel = mainViewModel!!
+
+        setupRecyclerView()
+        binding.floatingActionButton.setOnClickListener {
+            findNavController().navigate(R.id.action_overviewFragment_to_addProductFragment)
+        }
+
         return binding.root
     }
     private fun setupRecyclerView() {
@@ -66,7 +72,9 @@ class OverviewFragment : Fragment() {
                 is NetworkResult.Success -> {
 
                     response.data?.let {
-                        mAdapter.products=it.results
+                        val productList = ArrayList(it) // Convert to ArrayList
+                        mAdapter.products = productList
+
                     }
 
                 }
