@@ -24,40 +24,11 @@ class MainViewModel @Inject constructor(
     //this live data would notify the data binding setup of any changes
     var productsResponse:MutableLiveData<NetworkResult<WholeProduct>> =MutableLiveData()
     var searchedProductsResponse:MutableLiveData<NetworkResult<WholeProduct>> =MutableLiveData()
-    //var uploadProductsResponse:MutableLiveData<NetworkResult<>>
+    //lateinit var uploadProductsResponse:MutableLiveData<Boolean>
     fun getProducts()=viewModelScope.launch {
         getProductsSafely()
     }
-    fun uploadProducts(
-        productName: String,
-        productType: String,
-        price: Double,
-        tax: Double,
-        imageFile: File?
-    )=viewModelScope.launch {
-        uploadProductsSafely(productName, productType, price, tax, imageFile)
-    }
 
-    private suspend fun uploadProductsSafely(
-        productName: String,
-        productType: String,
-        price: Double,
-        tax: Double,
-        imageFile: File?
-    ) {
-        if(hasInternetConnection()){
-            val response=repository.remote.addProduct(productName, productType, price, tax, imageFile)
-
-        }
-        else{
-            Toast.makeText(
-                getApplication<Application>().applicationContext,
-                "Sorry, no internet",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-
-    }
 
     private suspend fun getProductsSafely() {
         // While the rds is fetching data from the API we can set the value to one of the classes of the sealed class we defined earlier.
@@ -104,7 +75,58 @@ class MainViewModel @Inject constructor(
         }
 
     }
+    fun uploadProducts(
+        productName: String,
+        productType: String,
+        price: Double,
+        tax: Double,
+        imageFile: File?
+    )=viewModelScope.launch {
+        uploadProductsSafely(productName, productType, price, tax, imageFile)
+    }
 
+    private suspend fun uploadProductsSafely(
+        productName: String,
+        productType: String,
+        price: Double,
+        tax: Double,
+        imageFile: File?
+    ) {
+        if (hasInternetConnection()) {
+            try {
+                val response = repository.remote.addProduct(productName, productType, price, tax, imageFile)
+                val responseBody = response.body()?.toString()
+
+                if (response.isSuccessful) {
+                    //uploadProductsResponse.value=true
+                    // Image upload was successful (assuming 200 status code for success)
+                    Toast.makeText(
+                        getApplication<Application>().applicationContext,
+                        "Image uploaded successfully",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    // Handle any other logic or UI updates here
+                }
+            } catch (e: Exception) {
+                // Exception during upload
+                //uploadProductsResponse.value=false
+                Toast.makeText(
+                    getApplication<Application>().applicationContext,
+                    "Error uploading image: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        } else {
+            // No internet connection
+           // uploadProductsResponse.value=false
+            Toast.makeText(
+                getApplication<Application>().applicationContext,
+                "Sorry, no internet",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
     private fun hasInternetConnection(): Boolean {
         val connectivityManager = getApplication<Application>().getSystemService(
             Context.CONNECTIVITY_SERVICE
@@ -118,5 +140,7 @@ class MainViewModel @Inject constructor(
             else -> false
         }
     }
-
+     /*fun setUploadProductsResponse(value: Boolean) {
+        uploadProductsResponse.value = value
+    }*/
 }

@@ -27,7 +27,7 @@ class RemoteDataSource @Inject constructor(private val swipeApi: SwipeApi) {
         price: Double,
         tax: Double,
         imageFile: File?
-    ): ResponseBody {
+    ): Response<Unit> {
         val imagePart = prepareImagePart(imageFile!!)
 
         return swipeApi.addProduct(

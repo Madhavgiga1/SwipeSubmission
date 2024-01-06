@@ -47,15 +47,28 @@ class AddProductFragment : Fragment() {
         binding.capturebutton.setOnClickListener {
             requestCameraGalleryPermission()
         }
+
         binding.okButton.setOnClickListener {
-            var name=binding.productName
-            var type=binding.productType
+            val name = binding.productName.text.toString()
+            val type = binding.productType.text.toString()
             val tax = binding.productTaxText.text.toString().toDoubleOrNull() ?: 0.0
             val price = binding.productPrice.text.toString().toDoubleOrNull() ?: 0.0
             var imageFile: File?=null
             if(bitmap!=null){
                 imageFile=bitmapToFile(bitmap!!)
             }
+            mainViewModel.uploadProducts(name, type,price, tax, imageFile)
+            /*mainViewModel.uploadProductsResponse.observe(viewLifecycleOwner) { uploadResult ->
+                mainViewModel.setUploadProductsResponse(false)
+                if (uploadResult == true) {
+                    binding.productName.text.clear()
+                    binding.productPrice.text.clear()
+                    binding.productType.text.clear()
+                    binding.productTaxText.text.clear()
+                    binding.capturedImageView.setImageResource(R.drawable.placeholder_image)
+                    Toast.makeText(requireContext(), "Image uploaded successfully", Toast.LENGTH_SHORT).show()
+                }
+            }*/
         }
         return binding.root
     }
@@ -135,4 +148,5 @@ class AddProductFragment : Fragment() {
             }
         builder.create().show()
     }
+
 }

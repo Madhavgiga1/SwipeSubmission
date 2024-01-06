@@ -26,5 +26,5 @@ interface SwipeApi {
         @Part("price") price: RequestBody,
         @Part("tax") tax: RequestBody,
         @Part image: MultipartBody.Part?
-    ):ResponseBody
+    ):Response<Unit>
 }

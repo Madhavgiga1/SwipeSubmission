@@ -74,6 +74,7 @@ class OverviewFragment : Fragment() {
                     response.data?.let {
                         val productList = ArrayList(it) // Convert to ArrayList
                         mAdapter.products = productList
+                        setupRecyclerView()
 
                     }
 
