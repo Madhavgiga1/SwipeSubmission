@@ -35,6 +35,7 @@ class MainViewModel @Inject constructor(
     var searchedProductsResponse:MutableLiveData<NetworkResult<WholeProduct>> =MutableLiveData()
     var uploadProductsResponse:MutableLiveData<NetworkResult<ImageResponse>> =MutableLiveData()
 
+    //for getting list of products
     fun getProducts()=viewModelScope.launch {
         getProductsSafely()
     }
@@ -44,7 +45,7 @@ class MainViewModel @Inject constructor(
         // While the rds is fetching data from the API we can set the value to one of the classes of the sealed class we defined earlier.
         productsResponse.value=NetworkResult.Loading()
 
-        if(hasInternetConnection()==true){
+        if(hasInternetConnection()){
             try{
                 val response=repository.remote.getProducts()
                 productsResponse.value=handleProductResponse(response)
@@ -56,20 +57,6 @@ class MainViewModel @Inject constructor(
         }
         else{
             productsResponse.value=NetworkResult.Error("No internet connection found buddy")
-        }
-    }
-
-    private suspend fun searchProductsSafeCall(searchQuery: Map<String, String>) {
-        searchedProductsResponse.value = NetworkResult.Loading()
-        if (hasInternetConnection()) {
-            try {
-                val response = repository.remote.searchProduct(searchQuery)
-                searchedProductsResponse.value = handleProductResponse(response)
-            } catch (e: Exception) {
-                searchedProductsResponse.value = NetworkResult.Error("Recipes not found.")
-            }
-        } else {
-            searchedProductsResponse.value = NetworkResult.Error("No Internet Connection.")
         }
     }
 
@@ -85,6 +72,29 @@ class MainViewModel @Inject constructor(
         }
 
     }
+
+    //for searching pridcts
+    fun searchProducts(searchQuery: Map<String, String>)=viewModelScope.launch {
+        searchProductsSafeCall(searchQuery)
+    }
+    private suspend fun searchProductsSafeCall(searchQuery: Map<String, String>) {
+        searchedProductsResponse.value = NetworkResult.Loading()
+        if (hasInternetConnection()) {
+            try {
+                val response = repository.remote.searchProduct(searchQuery)
+                searchedProductsResponse.value = handleProductResponse(response)
+            } catch (e: Exception) {
+                searchedProductsResponse.value = NetworkResult.Error("Products not found.")
+            }
+        } else {
+            searchedProductsResponse.value = NetworkResult.Error("No Internet Connection.")
+        }
+    }
+
+
+
+
+    //for uploading a custom product
     fun uploadProducts(
         productName: String,
         productType: String,
@@ -103,19 +113,12 @@ class MainViewModel @Inject constructor(
         imageFile: File?=null
     ) {
         if (hasInternetConnection()) {
+            uploadProductsResponse.value=NetworkResult.Loading()
             try {
                 var multipartBody=makereqbody(productName, productType, price, tax, imageFile)
                 val response = repository.remote.addProduct(multipartBody)
+                uploadProductsResponse.value=handleUploadResponse(response)
 
-
-                if (response.isSuccessful) {
-
-                    Toast.makeText(
-                        getApplication<Application>().applicationContext,
-                        "Image uploaded successfully",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
             }
             catch (e: Exception) {
                 // Exception during upload
@@ -135,6 +138,19 @@ class MainViewModel @Inject constructor(
             ).show()
         }
     }
+
+    private fun handleUploadResponse(response: Response<ImageResponse>): NetworkResult<ImageResponse>? {
+        when{
+            response.isSuccessful -> {
+                val productres = response.body()
+                return NetworkResult.Success(productres!!)
+            }
+            else -> {
+                return NetworkResult.Error(response.message())
+            }
+        }
+    }
+
     private fun prepareImagePart(imageFile: File): MultipartBody.Part {
         val imageRequestBody = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
         return MultipartBody.Part.createFormData("image", imageFile.name, imageRequestBody)

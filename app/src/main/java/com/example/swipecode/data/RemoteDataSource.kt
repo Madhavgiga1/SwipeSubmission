@@ -1,5 +1,6 @@
 package com.example.swipecode.data
 
+import com.example.swipecode.models.ImageResponse
 import com.example.swipecode.models.WholeProduct
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -20,7 +21,7 @@ class RemoteDataSource @Inject constructor(private val swipeApi: SwipeApi) {
 
     suspend fun addProduct(
         multipartBody: MultipartBody
-    ): Response<Unit>{
+    ): Response<ImageResponse>{
 
 
         return swipeApi.addProduct(

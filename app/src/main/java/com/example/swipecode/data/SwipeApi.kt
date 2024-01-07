@@ -1,5 +1,6 @@
 package com.example.swipecode.data
 
+import com.example.swipecode.models.ImageResponse
 import com.example.swipecode.models.WholeProduct
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -13,7 +14,7 @@ interface SwipeApi {
     suspend fun getProducts(): Response<WholeProduct>
 
 
-    @GET("/recipes/complexSearch")
+    @GET("get")
     suspend fun searchProducts(
         @QueryMap searchQuery: Map<String, String>
     ): Response<WholeProduct>
@@ -22,5 +23,5 @@ interface SwipeApi {
     @POST("add")
     suspend fun addProduct(
         @Part ("multi")multipartBody: MultipartBody
-    ): Response<Unit>
+    ): Response<ImageResponse>
 }

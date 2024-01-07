@@ -3,10 +3,12 @@ package com.example.swipecode.UI.Fragments
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.Application
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.NetworkRequest
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -19,7 +21,10 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModelProvider
+import coil.clear
+import coil.dispose
 import com.example.swipecode.R
+import com.example.swipecode.Utils.NetworkResult
 import com.example.swipecode.databinding.FragmentAddProductBinding
 import com.example.swipecode.viewmodels.MainViewModel
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -54,18 +59,45 @@ class AddProductFragment : Fragment() {
         }
 
         binding.okButton.setOnClickListener {
-            val name = binding.productName.text.toString()
-            val type = binding.productType.text.toString()
-            val tax = binding.productTaxText.text.toString()
-            val price = binding.productPrice.text.toString()
-
-            if(bitmap!=null){
-                image=mainViewModel.convertBitmapToFile(bitmap!!)
-            }
-            mainViewModel.uploadProducts(name,type,tax,price,image)
+            postdata()
 
         }
         return binding.root
+    }
+
+    private fun postdata() {
+        val name = binding.productName.text.toString()
+        val type = binding.productType.text.toString()
+        val tax = binding.productTaxText.text.toString()
+        val price = binding.productPrice.text.toString()
+
+        if(bitmap!=null){
+            image=mainViewModel.convertBitmapToFile(bitmap!!)
+        }
+        mainViewModel.uploadProducts(name,type,tax,price,image)
+        mainViewModel.uploadProductsResponse.observe(viewLifecycleOwner, { response ->
+            when (response) {
+                is NetworkResult.Success -> {
+                    Toast.makeText(
+                        requireContext(),
+                        "Everything uploaded successfully",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    binding.capturedImageView.dispose()
+                    binding.productName.text.clear()
+                    binding.productType.text.clear()
+                    binding.productTaxText.text.clear()
+                    binding.productPrice.text.clear()
+                }
+                is NetworkResult.Error -> {
+                    Toast.makeText(
+                        requireContext(),
+                        response.message.toString(),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        })
     }
 
     private fun requestCameraGalleryPermission() {
@@ -88,17 +120,7 @@ class AddProductFragment : Fragment() {
                 Toast.makeText(requireContext(), "Gallery permission denied", Toast.LENGTH_SHORT).show()
             }
         }
-    fun bitmapToFile(bitmap: Bitmap?): File {
-        // Assume context is your application or activity context
-        val filesDir = context?.filesDir
-        val imageFile = File(filesDir, "image.jpg")
 
-        val outputStream = FileOutputStream(imageFile)
-        bitmap!!.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
-        outputStream.close()
-
-        return imageFile
-    }
 
     private val imageFromGalleryLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->

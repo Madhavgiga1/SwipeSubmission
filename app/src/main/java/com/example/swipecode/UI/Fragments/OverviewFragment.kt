@@ -39,8 +39,13 @@ class OverviewFragment : Fragment() {
         binding.viewModel = mainViewModel!!
 
         setupRecyclerView()
+
         binding.floatingActionButton.setOnClickListener {
             findNavController().navigate(R.id.action_overviewFragment_to_addProductFragment)
+        }
+        binding.search.setOnSearchClickListener {
+            val query = binding.search.query.toString()
+            searchApiData(query)
         }
 
         return binding.root
@@ -50,16 +55,33 @@ class OverviewFragment : Fragment() {
         binding.recyclerview.layoutManager = LinearLayoutManager(requireContext())
 
     }
-    /*override fun onQueryTextSubmit(query: String?): Boolean {
-        if (query != null) {
-            searchApiData(query)
-        }
-        return true
+
+
+    private fun applyQueries(take:String): HashMap<String, String> {
+        val queries: HashMap<String, String> = HashMap()
+        queries["product_name"]=take
+        return queries
     }
+    private fun searchApiData(query: String?) {
+        mainViewModel.searchProducts(applyQueries(query!!))
 
-    private fun searchApiData(query: String) {
+        mainViewModel.searchedProductsResponse.observe(viewLifecycleOwner) { response ->
+            when (response) {
+                is NetworkResult.Success -> {
 
-    }*/
+                    val foodRecipe = response.data
+                    foodRecipe?.let {
+                        mAdapter.products=it
+                    }
+                }
+                is NetworkResult.Error -> {
+
+                    Toast.makeText(requireContext(), response.message.toString(), Toast.LENGTH_SHORT).show()
+                }
+
+            }
+        }
+    }
 
     private fun requestApiData() {
         mainViewModel.getProducts()
