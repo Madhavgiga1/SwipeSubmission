@@ -22,6 +22,10 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.swipecode.R
 import com.example.swipecode.databinding.FragmentAddProductBinding
 import com.example.swipecode.viewmodels.MainViewModel
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -31,8 +35,9 @@ class AddProductFragment : Fragment() {
     private var _binding: FragmentAddProductBinding? = null
     private val binding get() = _binding!!
     lateinit var mainViewModel: MainViewModel
-    var bitmap: Bitmap? = null
-    var imguri:Uri? = null
+    private var bitmap: Bitmap? = null
+    private var image:File?=null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mainViewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
@@ -51,24 +56,14 @@ class AddProductFragment : Fragment() {
         binding.okButton.setOnClickListener {
             val name = binding.productName.text.toString()
             val type = binding.productType.text.toString()
-            val tax = binding.productTaxText.text.toString().toDoubleOrNull() ?: 0.0
-            val price = binding.productPrice.text.toString().toDoubleOrNull() ?: 0.0
-            var imageFile: File?=null
+            val tax = binding.productTaxText.text.toString()
+            val price = binding.productPrice.text.toString()
+
             if(bitmap!=null){
-                imageFile=bitmapToFile(bitmap!!)
+                image=mainViewModel.convertBitmapToFile(bitmap!!)
             }
-            mainViewModel.uploadProducts(name, type,price, tax, imageFile)
-            /*mainViewModel.uploadProductsResponse.observe(viewLifecycleOwner) { uploadResult ->
-                mainViewModel.setUploadProductsResponse(false)
-                if (uploadResult == true) {
-                    binding.productName.text.clear()
-                    binding.productPrice.text.clear()
-                    binding.productType.text.clear()
-                    binding.productTaxText.text.clear()
-                    binding.capturedImageView.setImageResource(R.drawable.placeholder_image)
-                    Toast.makeText(requireContext(), "Image uploaded successfully", Toast.LENGTH_SHORT).show()
-                }
-            }*/
+            mainViewModel.uploadProducts(name,type,tax,price,image)
+
         }
         return binding.root
     }
@@ -90,20 +85,16 @@ class AddProductFragment : Fragment() {
                     Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
                 imageFromGalleryLauncher.launch(intent)
             } else {
-                Toast.makeText(
-                    requireContext(),
-                    "Gallery permission denied",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), "Gallery permission denied", Toast.LENGTH_SHORT).show()
             }
         }
-    fun bitmapToFile(bitmap: Bitmap): File {
+    fun bitmapToFile(bitmap: Bitmap?): File {
         // Assume context is your application or activity context
         val filesDir = context?.filesDir
         val imageFile = File(filesDir, "image.jpg")
 
         val outputStream = FileOutputStream(imageFile)
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+        bitmap!!.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
         outputStream.close()
 
         return imageFile
@@ -115,7 +106,9 @@ class AddProductFragment : Fragment() {
                 val selectedImage: Uri? = result.data?.data
                 selectedImage?.let { uri ->
                     try {
+
                         val inputStream = requireActivity().contentResolver.openInputStream(uri)
+
                         bitmap = BitmapFactory.decodeStream(inputStream)
                         val byteArrayOutputStream = ByteArrayOutputStream()
                         bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
@@ -148,5 +141,7 @@ class AddProductFragment : Fragment() {
             }
         builder.create().show()
     }
+
+
 
 }

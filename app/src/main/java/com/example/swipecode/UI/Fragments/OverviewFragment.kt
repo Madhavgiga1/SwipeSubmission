@@ -26,7 +26,6 @@ class OverviewFragment : Fragment() {
 
     private lateinit var mainViewModel: MainViewModel
     private val mAdapter by lazy { ProductAdapter() }
-    private lateinit var mView:View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,10 +33,7 @@ class OverviewFragment : Fragment() {
 
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         requestApiData()
         _binding = FragmentOverviewBinding.inflate(inflater, container, false)
         binding.viewModel = mainViewModel!!

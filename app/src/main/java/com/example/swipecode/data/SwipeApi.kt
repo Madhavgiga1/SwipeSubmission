@@ -21,10 +21,6 @@ interface SwipeApi {
     @Multipart
     @POST("add")
     suspend fun addProduct(
-        @Part("product_name") productName: RequestBody,
-        @Part("product_type") productType: RequestBody,
-        @Part("price") price: RequestBody,
-        @Part("tax") tax: RequestBody,
-        @Part image: MultipartBody.Part?
-    ):Response<Unit>
+        @Part ("multi")multipartBody: MultipartBody
+    ): Response<Unit>
 }

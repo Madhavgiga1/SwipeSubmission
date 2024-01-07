@@ -2,6 +2,7 @@ package com.example.swipecode.viewmodels
 
 import android.app.Application
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.widget.Toast
@@ -10,21 +11,30 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.swipecode.Utils.NetworkResult
 import com.example.swipecode.data.Repository
+import com.example.swipecode.models.ImageResponse
 import com.example.swipecode.models.WholeProduct
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
 import java.io.File
+import java.io.FileOutputStream
+import java.lang.StringBuilder
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val repository: Repository, application: Application
 ) : AndroidViewModel(application) {
-    //this live data would notify the data binding setup of any changes
+
     var productsResponse:MutableLiveData<NetworkResult<WholeProduct>> =MutableLiveData()
     var searchedProductsResponse:MutableLiveData<NetworkResult<WholeProduct>> =MutableLiveData()
-    //lateinit var uploadProductsResponse:MutableLiveData<Boolean>
+    var uploadProductsResponse:MutableLiveData<NetworkResult<ImageResponse>> =MutableLiveData()
+
     fun getProducts()=viewModelScope.launch {
         getProductsSafely()
     }
@@ -78,9 +88,9 @@ class MainViewModel @Inject constructor(
     fun uploadProducts(
         productName: String,
         productType: String,
-        price: Double,
-        tax: Double,
-        imageFile: File?
+        price: String,
+        tax: String,
+        imageFile: File?=null
     )=viewModelScope.launch {
         uploadProductsSafely(productName, productType, price, tax, imageFile)
     }
@@ -88,29 +98,28 @@ class MainViewModel @Inject constructor(
     private suspend fun uploadProductsSafely(
         productName: String,
         productType: String,
-        price: Double,
-        tax: Double,
-        imageFile: File?
+        price: String,
+        tax: String,
+        imageFile: File?=null
     ) {
         if (hasInternetConnection()) {
             try {
-                val response = repository.remote.addProduct(productName, productType, price, tax, imageFile)
-                val responseBody = response.body()?.toString()
+                var multipartBody=makereqbody(productName, productType, price, tax, imageFile)
+                val response = repository.remote.addProduct(multipartBody)
+
 
                 if (response.isSuccessful) {
-                    //uploadProductsResponse.value=true
-                    // Image upload was successful (assuming 200 status code for success)
+
                     Toast.makeText(
                         getApplication<Application>().applicationContext,
                         "Image uploaded successfully",
                         Toast.LENGTH_SHORT
                     ).show()
-
-                    // Handle any other logic or UI updates here
                 }
-            } catch (e: Exception) {
+            }
+            catch (e: Exception) {
                 // Exception during upload
-                //uploadProductsResponse.value=false
+
                 Toast.makeText(
                     getApplication<Application>().applicationContext,
                     "Error uploading image: ${e.message}",
@@ -119,7 +128,6 @@ class MainViewModel @Inject constructor(
             }
         } else {
             // No internet connection
-           // uploadProductsResponse.value=false
             Toast.makeText(
                 getApplication<Application>().applicationContext,
                 "Sorry, no internet",
@@ -127,10 +135,12 @@ class MainViewModel @Inject constructor(
             ).show()
         }
     }
+    private fun prepareImagePart(imageFile: File): MultipartBody.Part {
+        val imageRequestBody = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
+        return MultipartBody.Part.createFormData("image", imageFile.name, imageRequestBody)
+    }
     private fun hasInternetConnection(): Boolean {
-        val connectivityManager = getApplication<Application>().getSystemService(
-            Context.CONNECTIVITY_SERVICE
-        ) as ConnectivityManager
+        val connectivityManager = getApplication<Application>().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetwork = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
         return when {
@@ -140,7 +150,43 @@ class MainViewModel @Inject constructor(
             else -> false
         }
     }
-     /*fun setUploadProductsResponse(value: Boolean) {
-        uploadProductsResponse.value = value
-    }*/
+
+
+    fun convertBitmapToFile(bitmap: Bitmap): File {
+        val filesDir = getApplication<Application>().filesDir
+        val imageFile = File(filesDir, "image.jpg")
+
+        val outputStream = FileOutputStream(imageFile)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+        outputStream.close()
+
+        return imageFile
+    }
+    private fun makereqbody(
+        productName: String,
+        productType: String,
+        price: String,
+        tax: String,
+        imageFile: File?
+    ): MultipartBody {
+        var name = productName.toRequestBody()
+        var type = productType.toRequestBody()
+        var price = price.toRequestBody()
+        var tax = tax.toRequestBody()
+        var imagepart: MultipartBody.Part? = null
+        if (imageFile != null) {
+            imagepart = prepareImagePart(imageFile)
+        }
+        val builder = MultipartBody.Builder().setType(MultipartBody.FORM)
+
+        builder.addPart(name)
+        builder.addPart(type)
+        if (imagepart != null) {
+            builder.addPart(imagepart)
+        }
+        builder.addPart(price)
+        builder.addPart(tax)
+        return builder.build()
+
+    }
 }
